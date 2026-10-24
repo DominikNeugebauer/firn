@@ -1,0 +1,39 @@
+# Build
+build/
+Debug/
+Release/
+*.elf
+*.bin
+*.hex
+*.map
+*.o
+*.d
+*.su
+*.list
+
+# Cache
+CMakeFiles/
+CMakeCache.txt
+.cache/
+compile_commands.json
+.mxproject
+
+# Editor
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.swp
+.DS_Store
+
+# Unused CMSIS parts (CubeMX copies the full package).
+# The build only needs Drivers/CMSIS/Include and Drivers/CMSIS/Device.
+Drivers/CMSIS/Core/
+Drivers/CMSIS/Core_A/
+Drivers/CMSIS/DAP/
+Drivers/CMSIS/DSP/
+Drivers/CMSIS/NN/
+Drivers/CMSIS/RTOS/
+Drivers/CMSIS/RTOS2/
+Drivers/CMSIS/Documentation/

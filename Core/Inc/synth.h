@@ -39,4 +39,15 @@ void Synth_SetWaveform(uint8_t waveform);
 */
 void Synth_Render(int16_t *out, uint32_t frames);
 
+/**
+ * Initialize the synthesizer. Call this once before using the synth.
+ */
+void Synth_Init(void);
+
+/**
+ * Set the cutoff frequency of the low-pass filter in Hz.
+ * The filter is applied to the output of the oscillator.
+ */
+void Synth_SetCutoff(float hz);
+
 #endif /* SYNTH_H */

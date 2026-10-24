@@ -115,6 +115,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // Prefill the audio buffer before the codec starts
+  Synth_Init();
   Synth_SetFrequency(440.0f);
   Synth_Render(audio_buf, AUDIO_FRAMES * 2);
 
@@ -149,7 +150,9 @@ int main(void)
     float pot1 = pot_raw[0] / 4095.0f;   /* PA1 */
     float pot2 = pot_raw[1] / 4095.0f;   /* PA2 */
 
-    Synth_SetAmplitude(pot1 * pot1);
+    Synth_SetAmplitude(1.0f);
+    //Synth_SetAmplitude(pot1 * pot1);
+    Synth_SetCutoff(50.0f * powf(2.0f, 8.0f * pot1));
     Synth_SetFrequency(55.0f * powf(2.0f, 4.0f * pot2));   /* 55 ... 880 Hz */
 
     if(HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_SET) {

@@ -10,11 +10,12 @@ The STM32 generates the audio and streams it via I2S and DMA to the on-board CS4
 - User button (PA0): gate on
 
 ## Structure
-- `Core/Src/main.c` – setup, main loop, audio callbacks
-- `Core/Src/synth.c` – oscillator and waveforms
-- `Core/Src/cs43l22.c` – audio DAC driver
+- `Core/Src/main.c`     – setup, main loop, audio callbacks
+- `Core/Src/synth.c`    – oscillator and waveforms
+- `Core/Src/cs43l22.c`  – audio DAC driver
 - `Core/Src/envelope.c` – ADSR Envelope
-- `firn.ioc` – STM32CubeMX configuration
+- `Core/Src/onepole.c`  – Onepole Lowpass Filter
+- `firn.ioc`            – STM32CubeMX configuration
 
 Switching between waveforms is not possible in this version!
 

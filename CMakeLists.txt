@@ -72,6 +72,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/cs43l22.c
     Core/Src/synth.c
     Core/Src/envelope.c
+    Core/Src/onepole.c
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME}

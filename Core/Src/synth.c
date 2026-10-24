@@ -7,15 +7,17 @@
  * and sample rate.
  */
 #include "synth.h"
+#include "onepole.h"
 #include <math.h>
 
 #define TWO_PI 6.28318530718f
 
+static OnePole tone;
 static float s_phase = 0.0f;
 static float s_inc   = 440.0f / SYNTH_SAMPLE_RATE;
 static float s_amp   = 0.25f; // default is 1/4 of max
 static float s_amp_target = 0.0f;
-static uint8_t s_waveform = SYNTH_WAVEFORM_SINE;
+static uint8_t s_waveform = SYNTH_WAVEFORM_SQUARE;
 
 void Synth_SetFrequency(float hz)
 {
@@ -32,6 +34,16 @@ void Synth_SetAmplitude(float amp)
 void Synth_SetWaveform(uint8_t waveform)
 {
     s_waveform = waveform;
+}
+
+void Synth_Init(void)
+{
+    OnePole_Init(&tone, 20000.0f);   /* Start: Filter ganz offen */
+}
+
+void Synth_SetCutoff(float hz)
+{
+    OnePole_SetCutoff(&tone, hz);
 }
 
 void Synth_Render(int16_t *out, uint32_t frames)
@@ -59,6 +71,9 @@ void Synth_Render(int16_t *out, uint32_t frames)
             s = sinf(TWO_PI * s_phase) * s_amp;
             break;
         }
+
+        // Apply the one-pole low-pass filter to the sample
+        s = OnePole_Process(&tone, s);
 
         // Apply the envelope to the sample
         s *= Env_Process();

@@ -9,12 +9,18 @@
 #include "synth.h"
 #include "onepole.h"
 #include "svf.h"
+#include "tapedelay.h"
 #include <math.h>
 
 #define TWO_PI 6.28318530718f
 
+// Memory for the echo: 0.5 s at 48 kHz = 24000 samples (48 KB RAM)
+#define TAPE_DELAY_SAMPLES 24000
+
 static SVF tone;          // resonant low-pass, shapes the sound
 static OnePole highpass;  // removes bass rumble and DC offset
+static TapeDelay tape_delay;      // tape echo, plays the sound again later
+static int16_t tape_delay_buf[TAPE_DELAY_SAMPLES];
 static float s_phase = 0.0f;
 static float s_inc   = 440.0f / SYNTH_SAMPLE_RATE;
 static float s_amp   = 0.25f; // default is 1/4 of max
@@ -42,6 +48,7 @@ void Synth_Init(void)
 {
     SVF_Init(&tone, 8000.0f, 4.0f);   // start with the low-pass fully open, medium resonance
     OnePole_Init(&highpass, 20.0f);   // only remove what is below the lowest note
+    TapeDelay_Init(&tape_delay, tape_delay_buf, TAPE_DELAY_SAMPLES);   // 0.3 s, medium feedback and mix
 }
 
 void Synth_SetCutoff(float hz)
@@ -57,6 +64,11 @@ void Synth_SetResonance(float resonance)
 void Synth_SetHighpass(float hz)
 {
     OnePole_SetCutoff(&highpass, hz);
+}
+
+void Synth_SetTapeDelayTime(float seconds)
+{
+    TapeDelay_SetTime(&tape_delay, seconds);
 }
 
 void Synth_Render(int16_t *out, uint32_t frames)
@@ -93,6 +105,10 @@ void Synth_Render(int16_t *out, uint32_t frames)
 
         // Apply the envelope to the sample
         s *= Env_Process();
+
+        // Apply the echo after the envelope, so the echoes go on
+        // after the key is released
+        s = TapeDelay_Process(&tape_delay, s);
 
         s_phase += s_inc;
         if (s_phase >= 1.0f) s_phase -= 1.0f;

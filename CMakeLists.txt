@@ -74,6 +74,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/envelope.c
     Core/Src/onepole.c
     Core/Src/svf.c
+    Core/Src/tapedelay.c
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME}

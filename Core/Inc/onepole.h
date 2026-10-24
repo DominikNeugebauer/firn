@@ -2,9 +2,7 @@
  * onepole.h - One-pole high-pass filter
  * Dominik Neugebauer
  *
- * A high-pass filter lets high frequencies through and makes
- * low frequencies quieter. The cutoff frequency decides where
- * "low" ends and "high" begins.
+ * Onepole High-pass filter
  */
 #ifndef ONEPOLE_H
 #define ONEPOLE_H

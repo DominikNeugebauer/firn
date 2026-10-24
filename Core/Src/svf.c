@@ -7,7 +7,6 @@
  * at the same time. The mode decides which one is returned.
  *
  * Resonance makes the frequencies around the cutoff louder.
- * This gives the typical "synth filter" sound.
  */
 #include "svf.h"
 #include "synth.h"

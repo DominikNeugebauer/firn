@@ -58,7 +58,7 @@ DMA_HandleTypeDef hdma_spi3_tx;
 #define AUDIO_FRAMES 256
 static int16_t audio_buf[AUDIO_FRAMES * 2 * 2];
 
-#define NUM_POTS 2
+#define NUM_POTS 3
 static volatile uint16_t pot_raw[NUM_POTS]; // dma writes here
 
 /* USER CODE END PV */
@@ -149,11 +149,14 @@ int main(void)
   {
     float pot1 = pot_raw[0] / 4095.0f;   /* PA1 */
     float pot2 = pot_raw[1] / 4095.0f;   /* PA2 */
+    float pot3 = pot_raw[2] / 4095.0f;   /* PA3 */
 
-    Synth_SetAmplitude(1.0f);
+    Synth_SetAmplitude(1.0f); // fixed loud
     //Synth_SetAmplitude(pot1 * pot1);
-    Synth_SetCutoff(22.0f * powf(2.0f, 7.3f * pot1));      /* 50 ... 8000 Hz, SVF low-pass */
-    Synth_SetFrequency(20.0f * powf(2.0f, 5.0f * pot2));   /* 55 ... 880 Hz */
+    Synth_SetCutoff(22.0f * powf(2.0f, 7.3f * pot3));
+    //Synth_SetCutoff(22.0f * powf(2.0f, 7.3f * pot1));  // fun to group tape delay with svf
+    Synth_SetTapeDelayTime(0.02f * powf(25.0f, pot1));   // 20 ... 500 ms tape echo
+    Synth_SetFrequency(20.0f * powf(2.0f, 5.0f * pot2));
 
     if(HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_SET) {
       // button pressed
@@ -259,7 +262,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 2;
+  hadc1.Init.NbrOfConversion = 3;
   hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -281,6 +284,15 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_2;
   sConfig.Rank = 2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = 3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -401,11 +413,11 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(CODEC_RESET_GPIO_Port, CODEC_RESET_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PA0 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  /*Configure GPIO pin : USER_BTN_Pin */
+  GPIO_InitStruct.Pin = USER_BTN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(USER_BTN_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : CODEC_RESET_Pin */
   GPIO_InitStruct.Pin = CODEC_RESET_Pin;

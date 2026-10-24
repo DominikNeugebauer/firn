@@ -5,11 +5,12 @@ The STM32 generates the audio and streams it via I2S and DMA to the on-board CS4
 
 ## Current state
 - Waveforms: sine, square, triangle, sawtooth
-- Potentiometer 1 (PA1): cutoff of the resonant low-pass filter (50 ... 8000 Hz)
+- Potentiometer 1 (PA1): tape echo time (20 ... 500 ms), turning it bends the pitch of the echoes
 - Potentiometer 2 (PA2): frequency (55 ... 880 Hz)
 - User button (PA0): gate on
-- Amplitude is fixed at full volume
-- Signal chain: oscillator -> SVF low-pass -> one-pole high-pass -> envelope -> DAC
+- Amplitude is fixed at 0.1 (quiet)
+- Low-pass cutoff is fixed at 8000 Hz (open)
+- Signal chain: oscillator -> SVF low-pass -> one-pole high-pass -> envelope -> tape echo -> DAC
 
 ## Structure
 - `Core/Src/main.c`     – setup, main loop, audio callbacks
@@ -18,6 +19,7 @@ The STM32 generates the audio and streams it via I2S and DMA to the on-board CS4
 - `Core/Src/envelope.c` – ADSR Envelope
 - `Core/Src/onepole.c`  – one-pole high-pass filter (6 dB/oct)
 - `Core/Src/svf.c`      – Chamberlin state variable filter (12 dB/oct, resonance)
+- `Core/Src/tapedelay.c` – tape echo with feedback and pitch bending
 - `firn.ioc`            – STM32CubeMX configuration
 
 Switching between waveforms is not possible in this version!

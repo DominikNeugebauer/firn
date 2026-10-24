@@ -62,4 +62,10 @@ void Synth_SetResonance(float resonance);
  */
 void Synth_SetHighpass(float hz);
 
+/**
+ * Set the time of the tape echo in seconds (0.01 ... 0.5).
+ * The time glides to the new value, so the echoes bend in pitch.
+ */
+void Synth_SetTapeDelayTime(float seconds);
+
 #endif /* SYNTH_H */

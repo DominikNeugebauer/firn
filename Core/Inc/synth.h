@@ -45,9 +45,21 @@ void Synth_Render(int16_t *out, uint32_t frames);
 void Synth_Init(void);
 
 /**
- * Set the cutoff frequency of the low-pass filter in Hz.
- * The filter is applied to the output of the oscillator.
+ * Set the cutoff frequency of the resonant low-pass filter (SVF) in Hz.
+ * Range 20 ... 8000 Hz. The filter is applied to the output of the oscillator.
  */
 void Synth_SetCutoff(float hz);
+
+/**
+ * Set the resonance of the low-pass filter (SVF).
+ * 0.707 = no peak, 2 ... 10 = stronger peak at the cutoff.
+ */
+void Synth_SetResonance(float resonance);
+
+/**
+ * Set the cutoff frequency of the high-pass filter (one-pole) in Hz.
+ * Default is 30 Hz, which only removes rumble and DC offset.
+ */
+void Synth_SetHighpass(float hz);
 
 #endif /* SYNTH_H */

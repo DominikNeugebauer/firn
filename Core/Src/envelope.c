@@ -10,10 +10,10 @@
 
 // settings in seconds
 // sustain as level from 0.0 to 1.0
-static float s_attack  = 0.01f;
+static float s_attack  = 0.2f;
 static float s_decay   = 0.200f;
 static float s_sustain = 0.6f;
-static float s_release = 0.300f;
+static float s_release = 2.00f;
 static const float min_level = 0.001f; // minimum time for attack, decay, release to avoid division by zero
 
 static volatile int s_gate = 0;    // 1 = key pressed, 0 = key released

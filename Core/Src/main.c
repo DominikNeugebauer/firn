@@ -152,8 +152,8 @@ int main(void)
 
     Synth_SetAmplitude(1.0f);
     //Synth_SetAmplitude(pot1 * pot1);
-    Synth_SetCutoff(50.0f * powf(2.0f, 8.0f * pot1));
-    Synth_SetFrequency(55.0f * powf(2.0f, 4.0f * pot2));   /* 55 ... 880 Hz */
+    Synth_SetCutoff(22.0f * powf(2.0f, 7.3f * pot1));      /* 50 ... 8000 Hz, SVF low-pass */
+    Synth_SetFrequency(20.0f * powf(2.0f, 5.0f * pot2));   /* 55 ... 880 Hz */
 
     if(HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_SET) {
       // button pressed

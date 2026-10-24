@@ -1,17 +1,17 @@
 /**
- * onepole.c - One-pole low-pass filter
+ * onepole.h - One-pole high-pass filter
  * Dominik Neugebauer
- * 
- * A low-pass filter lets low frequencies through and makes
- * high frequencies quieter. The cutoff frequency decides where
+ *
+ * A high-pass filter lets high frequencies through and makes
+ * low frequencies quieter. The cutoff frequency decides where
  * "low" ends and "high" begins.
  */
 #ifndef ONEPOLE_H
 #define ONEPOLE_H
 
 typedef struct {
-    float a;   // coefficient for the filter, calculated from the cutoff frequency
-    float out; // last output value
+    float a;  // coefficient for the filter, calculated from the cutoff frequency
+    float lp; // low-pass memory, the high-pass is the input minus this value
 } OnePole;
 
 // Prepare filter. Call this once before using the filter.

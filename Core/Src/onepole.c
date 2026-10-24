@@ -1,14 +1,12 @@
 /**
- * onepole.c - One-pole low-pass filter
+ * onepole.h - One-pole high-pass filter
  * Dominik Neugebauer
- * 
- * A low-pass filter lets low frequencies through and makes
- * high frequencies quieter. The cutoff frequency decides where
- * "low" ends and "high" begins.
+ *
+ * Onepole High-pass filter
  */
 #include "onepole.h"
 #include "synth.h"
-#include <math.h> 
+#include <math.h>
 
 #define PI 3.14159265359f
 
@@ -18,7 +16,7 @@
 
 void OnePole_Init(OnePole *f, float cutoff_hz)
 {
-    f->out = 0.0f;                     // start with silence
+    f->lp = 0.0f;                      // start with silence
     OnePole_SetCutoff(f, cutoff_hz);   // calculate a from cutoff
 }
 
@@ -34,12 +32,12 @@ void OnePole_SetCutoff(OnePole *f, float cutoff_hz)
 
 float OnePole_Process(OnePole *f, float in)
 {
-    // One-pole low-pass: move the output a part (a) of the way towards the input.
-    // Slow changes (low frequencies): the output has time to catch up -> they pass.
-    // Fast changes (high frequencies): the input flips before the output catches up
-    //   -> the output swings less -> they get quieter.
-    // Result: sharp edges get rounded, high overtones are reduced,
-    //   the pitch stays the same, the sound gets duller.
-    f->out = f->out + f->a * (in - f->out);
-    return f->out;
+    // First -> one-pole low-pass: move lp a part (a) of the way towards the input.
+    //   lp only keeps the slow changes (low frequencies) of the input.
+    // Second part -> high-pass: subtract the low part from the input.
+    //   What is left are the fast changes (high frequencies).
+    // Result: the bass and any DC offset are removed,
+    //   the pitch stays the same, the sound gets thinner.
+    f->lp = f->lp + f->a * (in - f->lp);
+    return in - f->lp;
 }

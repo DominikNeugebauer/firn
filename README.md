@@ -5,16 +5,19 @@ The STM32 generates the audio and streams it via I2S and DMA to the on-board CS4
 
 ## Current state
 - Waveforms: sine, square, triangle, sawtooth
-- Potentiometer 1 (PA1): amplitude
-- Potentiometer 2 (PA2): frequency
+- Potentiometer 1 (PA1): cutoff of the resonant low-pass filter (50 ... 8000 Hz)
+- Potentiometer 2 (PA2): frequency (55 ... 880 Hz)
 - User button (PA0): gate on
+- Amplitude is fixed at full volume
+- Signal chain: oscillator -> SVF low-pass -> one-pole high-pass -> envelope -> DAC
 
 ## Structure
 - `Core/Src/main.c`     – setup, main loop, audio callbacks
 - `Core/Src/synth.c`    – oscillator and waveforms
 - `Core/Src/cs43l22.c`  – audio DAC driver
 - `Core/Src/envelope.c` – ADSR Envelope
-- `Core/Src/onepole.c`  – Onepole Lowpass Filter
+- `Core/Src/onepole.c`  – one-pole high-pass filter (6 dB/oct)
+- `Core/Src/svf.c`      – Chamberlin state variable filter (12 dB/oct, resonance)
 - `firn.ioc`            – STM32CubeMX configuration
 
 Switching between waveforms is not possible in this version!

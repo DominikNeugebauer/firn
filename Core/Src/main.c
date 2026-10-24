@@ -24,6 +24,7 @@
 
 #include "cs43l22.h"
 #include "synth.h"
+#include "envelope.h"
 #include <math.h>
 
 /* USER CODE END Includes */
@@ -151,18 +152,26 @@ int main(void)
     Synth_SetAmplitude(pot1 * pot1);
     Synth_SetFrequency(55.0f * powf(2.0f, 4.0f * pot2));   /* 55 ... 880 Hz */
 
-    if (HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_SET && button_pressed == 0) {
-      button_pressed = 1;
-
-      // switch waveform
-      waveformIndex = (waveformIndex + 1) % 4;
-      Synth_SetWaveform(waveformOptions[waveformIndex]);
+    if(HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_SET) {
+      // button pressed
+      Env_Gate(1);
+    } else {
+      // button released
+      Env_Gate(0);
     }
 
-    if(HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_RESET) 
-    {
-      button_pressed = 0;
-    }
+    // if (HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_SET && button_pressed == 0) {
+    //   button_pressed = 1;
+
+    //   // switch waveform
+    //   waveformIndex = (waveformIndex + 1) % 4;
+    //   Synth_SetWaveform(waveformOptions[waveformIndex]);
+    // }
+
+    // if(HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_RESET) 
+    // {
+    //   button_pressed = 0;
+    // }
 
     HAL_Delay(1);
 

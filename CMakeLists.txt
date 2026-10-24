@@ -71,6 +71,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     Core/Src/cs43l22.c
     Core/Src/synth.c
+    Core/Src/envelope.c
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME}

@@ -7,13 +7,16 @@ The STM32 generates the audio and streams it via I2S and DMA to the on-board CS4
 - Waveforms: sine, square, triangle, sawtooth
 - Potentiometer 1 (PA1): amplitude
 - Potentiometer 2 (PA2): frequency
-- User button (PA0): switch waveform
+- User button (PA0): gate on
 
 ## Structure
 - `Core/Src/main.c` – setup, main loop, audio callbacks
 - `Core/Src/synth.c` – oscillator and waveforms
 - `Core/Src/cs43l22.c` – audio DAC driver
+- `Core/Src/envelope.c` – ADSR Envelope
 - `firn.ioc` – STM32CubeMX configuration
+
+Switching between waveforms is not possible in this version!
 
 ## SWD Connection
 

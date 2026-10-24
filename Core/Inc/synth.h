@@ -10,6 +10,7 @@
 #define SYNTH_H
 
 #include <stdint.h>
+#include "envelope.h"
 
 #define SYNTH_SAMPLE_RATE   48000.0f
 

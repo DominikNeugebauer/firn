@@ -60,6 +60,9 @@ void Synth_Render(int16_t *out, uint32_t frames)
             break;
         }
 
+        // Apply the envelope to the sample
+        s *= Env_Process();
+
         s_phase += s_inc;
         if (s_phase >= 1.0f) s_phase -= 1.0f;
 

@@ -4,13 +4,15 @@ Firmware for **firn**, a digital synthesizer running on an STM32F411 (STM32F411E
 The STM32 generates the audio and streams it via I2S and DMA to the on-board CS43L22 DAC (48 kHz, 16-bit stereo).
 
 ## Current state
-- Waveforms: sine, square, triangle, sawtooth
-- Potentiometer 1 (PA1): tape echo time (20 ... 500 ms), turning it bends the pitch of the echoes
-- Potentiometer 2 (PA2): frequency (55 ... 880 Hz)
+- Waveforms: sine, square (default), triangle, sawtooth
+- Potentiometer 1 (PA1): low-pass cutoff (22 ... 3500 Hz)
+- Potentiometer 2 (PA2): frequency (20 ... 640 Hz)
+- Potentiometer 3 (PA3): shape (0 = normal waveform, 1 = strongest change)
 - User button (PA0): gate on
-- Amplitude is fixed at 0.1 (quiet)
-- Low-pass cutoff is fixed at 8000 Hz (open)
-- Signal chain: oscillator -> SVF low-pass -> one-pole high-pass -> envelope -> tape echo -> DAC
+- Amplitude is fixed at 1.0
+- Tape echo time is fixed at 100 ms
+- Shape LFO is fixed at 1 Hz, it makes the shape stronger and back
+- Signal chain: oscillator + shape -> SVF low-pass -> one-pole high-pass -> envelope -> tape echo -> DAC
 
 ## Structure
 - `Core/Src/main.c`     – setup, main loop, audio callbacks
@@ -20,6 +22,8 @@ The STM32 generates the audio and streams it via I2S and DMA to the on-board CS4
 - `Core/Src/onepole.c`  – one-pole high-pass filter (6 dB/oct)
 - `Core/Src/svf.c`      – Chamberlin state variable filter (12 dB/oct, resonance)
 - `Core/Src/tapedelay.c` – tape echo with feedback and pitch bending
+- `Core/Src/shape.c`    – waveform shaping (pulse width / phase bending, PolyBLEP)
+- `Core/Src/shapelfo.c` – slow sine LFO that moves the shape
 - `firn.ioc`            – STM32CubeMX configuration
 
 Switching between waveforms is not possible in this version!

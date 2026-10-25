@@ -153,9 +153,11 @@ int main(void)
 
     Synth_SetAmplitude(1.0f); // fixed loud
     //Synth_SetAmplitude(pot1 * pot1);
-    Synth_SetCutoff(22.0f * powf(2.0f, 7.3f * pot3));
+    Synth_SetCutoff(22.0f * powf(2.0f, 7.3f * pot1));
     //Synth_SetCutoff(22.0f * powf(2.0f, 7.3f * pot1));  // fun to group tape delay with svf
-    Synth_SetTapeDelayTime(0.02f * powf(25.0f, pot1));   // 20 ... 500 ms tape echo
+    //Synth_SetTapeDelayTime(0.02f * powf(25.0f, pot1));   // 20 ... 500 ms tape echo
+    Synth_SetTapeDelayTime(0.1f);
+    Synth_SetShape(pot3);
     Synth_SetFrequency(20.0f * powf(2.0f, 5.0f * pot2));
 
     if(HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_SET) {

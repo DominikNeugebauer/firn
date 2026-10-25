@@ -10,6 +10,7 @@
 #include "onepole.h"
 #include "svf.h"
 #include "tapedelay.h"
+#include "shape.h"
 #include <math.h>
 
 #define TWO_PI 6.28318530718f
@@ -20,6 +21,7 @@
 static SVF tone;          // resonant low-pass, shapes the sound
 static OnePole highpass;  // removes bass rumble and DC offset
 static TapeDelay tape_delay;      // tape echo, plays the sound again later
+static Shape shape;
 static int16_t tape_delay_buf[TAPE_DELAY_SAMPLES];
 static float s_phase = 0.0f;
 static float s_inc   = 440.0f / SYNTH_SAMPLE_RATE;
@@ -49,6 +51,7 @@ void Synth_Init(void)
     SVF_Init(&tone, 8000.0f, 4.0f);   // start with the low-pass fully open, medium resonance
     OnePole_Init(&highpass, 20.0f);   // only remove what is below the lowest note
     TapeDelay_Init(&tape_delay, tape_delay_buf, TAPE_DELAY_SAMPLES);   // 0.3 s, medium feedback and mix
+    Shape_Init(&shape, 0.5f);         // 0.5 = normal waveform
 }
 
 void Synth_SetCutoff(float hz)
@@ -71,31 +74,20 @@ void Synth_SetTapeDelayTime(float seconds)
     TapeDelay_SetTime(&tape_delay, seconds);
 }
 
+void Synth_SetShape(float width)
+{
+    Shape_SetWidth(&shape, width);
+}
+
 void Synth_Render(int16_t *out, uint32_t frames)
 {
     for (uint32_t i = 0; i < frames; i++) {
         s_amp += 0.02f * (s_amp_target - s_amp); // slow on/off ramp for anti aliasing
         
-        float s = 0.0f;
-        switch (s_waveform)
-        {
-        case SYNTH_WAVEFORM_SINE:
-            s = sinf(TWO_PI * s_phase) * s_amp;
-            break;
-        case SYNTH_WAVEFORM_SAWTOOTH:
-            s = (2.0f * s_phase - 1.0f) * s_amp;
-            break;
-        case SYNTH_WAVEFORM_SQUARE:
-            s = (s_phase < 0.5f ? 1.0f : -1.0f) * s_amp;
-            break;
-        case SYNTH_WAVEFORM_TRIANGLE:
-            s = (s_phase < 0.5f ? 4.0f * s_phase - 1.0f : 3.0f - 4.0f * s_phase) * s_amp;
-            break;
-        
-        default:
-            s = sinf(TWO_PI * s_phase) * s_amp;
-            break;
-        }
+        float s = Shape_Process(&shape, s_phase, s_inc, s_waveform);
+
+        // Apply amplitude
+        s *= s_amp;
 
         // Apply the resonant low-pass filter to the sample
         s = SVF_Process(&tone, s);

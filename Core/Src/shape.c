@@ -2,15 +2,19 @@
  * shape.c - Waveform shaping
  * Dominik Neugebauer
  *
- * Changes the shape of a waveform with one width value.
+ * Changes the shape of a waveform with one amount value.
+ * 0.0 = normal waveform, 1.0 = strongest change.
  */
 #include "shape.h"
 #include "synth.h"
 #include <math.h>
 
-// At 0.0 or 1.0 the square would be silent, so stay a bit away from the edges
+// The width moves from 0.5 (normal) down to MIN_WIDTH (strongest).
+//   Only one side is used: width 0.05 and 0.95 sound the same
+//   (the square is only upside down), so with both sides a full turn
+//   of the poti would sound like going back to the start.
+// At 0.0 the square would be silent, so stay a bit away from the edge.
 #define MIN_WIDTH 0.05f
-#define MAX_WIDTH 0.95f
 
 #define TWO_PI 6.28318530718f
 
@@ -41,20 +45,21 @@ static float poly_blep(float t, float dt)
     return 0.0f;
 }
 
-void Shape_Init(Shape *s, float width)
+void Shape_Init(Shape *s, float amount)
 {
-    Shape_SetWidth(s, width);
+    Shape_SetAmount(s, amount);
     s->width = s->target;   // no glide at the start
 }
 
-void Shape_SetWidth(Shape *s, float width)
+void Shape_SetAmount(Shape *s, float amount)
 {
-    // keep the width in a useful range
-    if (width < MIN_WIDTH) width = MIN_WIDTH;
-    if (width > MAX_WIDTH) width = MAX_WIDTH;
+    // keep the amount in range 0.0 ... 1.0
+    if (amount < 0.0f) amount = 0.0f;
+    if (amount > 1.0f) amount = 1.0f;
 
+    // amount 0.0 -> width 0.5 (normal), amount 1.0 -> width MIN_WIDTH
     // only set the target, Shape_Process glides there slowly
-    s->target = width;
+    s->target = 0.5f - (0.5f - MIN_WIDTH) * amount;
 }
 
 float Shape_Process(Shape *s, float phase, float inc, uint8_t waveform)

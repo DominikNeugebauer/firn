@@ -69,10 +69,18 @@ void Synth_SetHighpass(float hz);
 void Synth_SetTapeDelayTime(float seconds);
 
 /**
- * Set the shape of the waveform, 0.0 ... 1.0. 0.5 = normal waveform.
- * Square: pulse width. Triangle: from ramp up to ramp down.
+ * Set the shape of the waveform, 0.0 ... 1.0.
+ * 0.0 = normal waveform, 1.0 = strongest change.
+ * Square: narrower pulse. Triangle: towards a ramp.
  * Sine and sawtooth get bent. The value glides, so a noisy poti is ok.
  */
-void Synth_SetShape(float width);
+void Synth_SetShape(float amount);
+
+/**
+ * Set the speed of the shape LFO in Hz (0.0 ... 20.0).
+ * The LFO makes the shape slowly stronger, starting from the value
+ * of Synth_SetShape, and back. 0 = off. The LFO is off until a rate is set.
+ */
+void Synth_SetShapeLfoRate(float hz);
 
 #endif /* SYNTH_H */

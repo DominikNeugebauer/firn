@@ -61,6 +61,9 @@ static int16_t audio_buf[AUDIO_FRAMES * 2 * 2];
 #define NUM_POTS 3
 static volatile uint16_t pot_raw[NUM_POTS]; // dma writes here
 
+#define NUM_MUX_POTS 5
+static float mux_pot[NUM_MUX_POTS]; // pots on AMUX A0..A3, output goes to PA2 (pot_raw[1])
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -76,6 +79,24 @@ static void MX_I2C1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+// Select AMUX channel: S0 = PD2, S1 = PB4, S2 = PD3
+static void Mux_Select(uint8_t ch)
+{
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, (ch & 1) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, (ch & 2) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, (ch & 4) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+}
+
+// Read all AMUX pots, each needs a short wait so the ADC scan picks up the new channel
+static void Mux_ReadPots(void)
+{
+  for (uint8_t ch = 0; ch < NUM_MUX_POTS; ch++) {
+    Mux_Select(ch);
+    for (volatile int i = 0; i < 500; i++);  // ~ a few ADC scans of settling time
+    mux_pot[ch] = pot_raw[1] / 4095.0f;
+  }
+}
 
 /* USER CODE END 0 */
 
@@ -147,19 +168,21 @@ int main(void)
 
   while (1)
   {
+    Mux_ReadPots();  // not used yet
+
     float pot1 = pot_raw[0] / 4095.0f;   /* PA1 */
     float pot2 = pot_raw[1] / 4095.0f;   /* PA2 */
     float pot3 = pot_raw[2] / 4095.0f;   /* PA3 */
 
-    Synth_SetAmplitude(1.0f); // fixed loud
+    Synth_SetAmplitude(mux_pot[0]); // fixed loud
     //Synth_SetAmplitude(pot1 * pot1);
-    Synth_SetCutoff(22.0f * powf(2.0f, 7.3f * pot1));
-    //Synth_SetCutoff(22.0f * powf(2.0f, 7.3f * pot1));  // fun to group tape delay with svf
-    //Synth_SetTapeDelayTime(0.02f * powf(25.0f, pot1));   // 20 ... 500 ms tape echo
-    Synth_SetTapeDelayTime(0.1f);
-    Synth_SetShape(pot3);
-    Synth_SetShapeLfoRate(1.0f);
-    Synth_SetFrequency(20.0f * powf(2.0f, 5.0f * pot2));
+    Synth_SetCutoff(22.0f * powf(2.0f, 7.3f * mux_pot[4]));
+    //Synth_SetCutoff(22.0f * powf(2.0f, 7.3f * mux_pot[1]));  // fun to group tape delay with svf
+    Synth_SetTapeDelayTime(0.02f * powf(25.0f, mux_pot[1]));   // 20 ... 500 ms tape echo
+    //Synth_SetTapeDelayTime(0.1f);
+    Synth_SetShape(mux_pot[3]);
+    //Synth_SetShapeLfoRate(mux_pot[3]); // sounds a bit shit!
+    Synth_SetFrequency(20.0f * powf(2.0f, 5.0f * mux_pot[2]));
 
     if(HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_SET) {
       // button pressed
@@ -414,7 +437,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(CODEC_RESET_GPIO_Port, CODEC_RESET_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2|GPIO_PIN_3|CODEC_RESET_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : USER_BTN_Pin */
   GPIO_InitStruct.Pin = USER_BTN_Pin;
@@ -422,12 +448,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USER_BTN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : CODEC_RESET_Pin */
-  GPIO_InitStruct.Pin = CODEC_RESET_Pin;
+  /*Configure GPIO pins : PD2 PD3 CODEC_RESET_Pin */
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|CODEC_RESET_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(CODEC_RESET_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 

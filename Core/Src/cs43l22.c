@@ -75,10 +75,10 @@ HAL_StatusTypeDef CS43L22_Init(I2C_HandleTypeDef *hi2c)
     // I2S format: 16-bit, I2S standard, slave mode
     err |= reg_write(REG_INTERFACE_CTL1, 0x04);
 
-    // set volume to -24 dB
+    // set volume to -12 dB
     err |= reg_write(REG_HP_A_VOL, 0x00);
     err |= reg_write(REG_HP_B_VOL, 0x00);
-    err |= CS43L22_SetMasterVolume(-24);
+    err |= CS43L22_SetMasterVolume(-12);
 
     return err ? HAL_ERROR : HAL_OK;
 }

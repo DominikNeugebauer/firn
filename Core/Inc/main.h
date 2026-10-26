@@ -59,6 +59,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define USER_BTN_Pin GPIO_PIN_0
 #define USER_BTN_GPIO_Port GPIOA
+#define BTN_SW_WAVE_Pin GPIO_PIN_12
+#define BTN_SW_WAVE_GPIO_Port GPIOB
 #define CODEC_RESET_Pin GPIO_PIN_4
 #define CODEC_RESET_GPIO_Port GPIOD
 

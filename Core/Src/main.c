@@ -173,6 +173,8 @@ int main(void)
     SYNTH_WAVEFORM_TRIANGLE
   };
   uint8_t waveformIndex = 0;
+  uint32_t last_press = 0;
+  Synth_SetWaveform(waveformOptions[waveformIndex]);
 
   while (1)
   {
@@ -192,6 +194,7 @@ int main(void)
     //Synth_SetShapeLfoRate(mux_pot[3]); // sounds a bit shit!
     //Synth_SetFrequency(20.0f * powf(2.0f, 5.0f * mux_pot[2]));
     Synth_SetFrequency(Midi_GetFrequency()); // frequency from the last MIDI key
+    Synth_SetResonance(0.707f * powf(14.0f, mux_pot[2]));   // 0.707 (flat) ... ~10 (strong peak)
 
     if(HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_SET || Midi_GetGate()) {
       // button pressed or MIDI key pressed
@@ -201,18 +204,15 @@ int main(void)
       Env_Gate(0);
     }
 
-    // if (HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_SET && button_pressed == 0) {
-    //   button_pressed = 1;
-
-    //   // switch waveform
-    //   waveformIndex = (waveformIndex + 1) % 4;
-    //   Synth_SetWaveform(waveformOptions[waveformIndex]);
-    // }
-
-    // if(HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_RESET) 
-    // {
-    //   button_pressed = 0;
-    // }
+    // Waveform button has a pull-up, so pressed = RESET.
+    // Switch only on the press edge, ignore bouncing for 50 ms.
+    short wave_btn = HAL_GPIO_ReadPin(BTN_SW_WAVE_GPIO_Port, BTN_SW_WAVE_Pin) == GPIO_PIN_RESET;
+    if (wave_btn && !button_pressed && HAL_GetTick() - last_press > 50) {
+      last_press = HAL_GetTick();
+      waveformIndex = (waveformIndex + 1) % 4;
+      Synth_SetWaveform(waveformOptions[waveformIndex]);
+    }
+    button_pressed = wave_btn;
 
     HAL_Delay(1);
 

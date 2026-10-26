@@ -25,6 +25,7 @@
 #include "cs43l22.h"
 #include "synth.h"
 #include "envelope.h"
+#include "midi.h"
 #include <math.h>
 
 /* USER CODE END Includes */
@@ -53,6 +54,8 @@ I2C_HandleTypeDef hi2c1;
 I2S_HandleTypeDef hi2s3;
 DMA_HandleTypeDef hdma_spi3_tx;
 
+UART_HandleTypeDef huart2;
+
 /* USER CODE BEGIN PV */
 
 #define AUDIO_FRAMES 256
@@ -73,6 +76,7 @@ static void MX_DMA_Init(void);
 static void MX_I2S3_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -133,6 +137,7 @@ int main(void)
   MX_I2S3_Init();
   MX_ADC1_Init();
   MX_I2C1_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
   // Prefill the audio buffer before the codec starts
@@ -152,6 +157,9 @@ int main(void)
   // ADC is measuring continuously, DMA is writing to pot_raw
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)pot_raw, NUM_POTS);
   __HAL_DMA_DISABLE_IT(&hdma_adc1, DMA_IT_TC | DMA_IT_HT);  // no interrupts needed, avoids IRQ flood
+
+  // Start receiving MIDI on USART2 (RX = PD6)
+  Midi_Init(&huart2);
 
   /* USER CODE END 2 */
 
@@ -182,10 +190,11 @@ int main(void)
     //Synth_SetTapeDelayTime(0.1f);
     Synth_SetShape(mux_pot[3]);
     //Synth_SetShapeLfoRate(mux_pot[3]); // sounds a bit shit!
-    Synth_SetFrequency(20.0f * powf(2.0f, 5.0f * mux_pot[2]));
+    //Synth_SetFrequency(20.0f * powf(2.0f, 5.0f * mux_pot[2]));
+    Synth_SetFrequency(Midi_GetFrequency()); // frequency from the last MIDI key
 
-    if(HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_SET) {
-      // button pressed
+    if(HAL_GPIO_ReadPin(USER_BTN_GPIO_Port, USER_BTN_Pin) == GPIO_PIN_SET || Midi_GetGate()) {
+      // button pressed or MIDI key pressed
       Env_Gate(1);
     } else {
       // button released
@@ -398,6 +407,39 @@ static void MX_I2S3_Init(void)
 }
 
 /**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 31250;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -409,7 +451,7 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Stream5_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
   /* DMA2_Stream0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
@@ -432,9 +474,10 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2|GPIO_PIN_3|CODEC_RESET_Pin, GPIO_PIN_RESET);
@@ -447,6 +490,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USER_BTN_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PE8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : BTN_SW_WAVE_Pin */
+  GPIO_InitStruct.Pin = BTN_SW_WAVE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(BTN_SW_WAVE_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PD2 PD3 CODEC_RESET_Pin */
   GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|CODEC_RESET_Pin;
@@ -482,6 +537,18 @@ void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s)
   if (hi2s->Instance == SPI3) {
     Synth_Render(&audio_buf[AUDIO_FRAMES * 2], AUDIO_FRAMES);
   }
+}
+
+// MIDI: one byte received
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  Midi_RxCallback(huart);
+}
+
+// MIDI: UART error, start receiving again
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+  Midi_ErrorCallback(huart);
 }
 
 /* USER CODE END 4 */

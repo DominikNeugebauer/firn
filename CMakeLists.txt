@@ -77,6 +77,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/tapedelay.c
     Core/Src/shape.c
     Core/Src/shapelfo.c
+    Core/Src/midi.c
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME}

@@ -12,6 +12,7 @@
  */
 #include "tapedelay.h"
 #include "synth.h"
+#include "softclip.h"
 
 #define MIN_TIME_S      0.010f   // 10 ms
 #define MAX_FEEDBACK    0.9f     // above 1.0 the echoes would get louder forever
@@ -91,8 +92,8 @@ float TapeDelay_Process(TapeDelay *d, float in)
     // Write: store the input plus a part of the echo.
     //   The echo comes back again later, a bit quieter each time -> it fades away.
     float store = in + d->feedback * echo;
-    if (store >  1.0f) store =  1.0f;   // keep it in the int16 range
-    if (store < -1.0f) store = -1.0f;
+    // keep it in the int16 range. Soft, so loud echoes do not crackle
+    store = SoftClip_Process(store);
     d->buf[d->write] = (int16_t)(store * 32767.0f);
 
     d->write++;

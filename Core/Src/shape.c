@@ -16,6 +16,7 @@
 // At 0.0 the square would be silent, so stay a bit away from the edge.
 #define MIN_WIDTH 0.05f
 
+#define PI     3.14159265359f
 #define TWO_PI 6.28318530718f
 
 // How fast the width glides to the new value.
@@ -41,6 +42,28 @@ static float poly_blep(float t, float dt)
         // just before the jump
         t = (t - 1.0f) / dt;
         return t * t + t + t + 1.0f;
+    }
+    return 0.0f;
+}
+
+// PolyBLAMP: the same idea as PolyBLEP, but for a corner instead of a jump.
+//   A corner is where the wave suddenly changes its direction (the tip of
+//   the triangle). A sharp corner also has overtones above the Nyquist
+//   frequency, they fold back and sound harsh. PolyBLAMP rounds the
+//   corner off over about 2 samples.
+//   t is the distance to the corner in phase, dt the phase increment.
+//   The result must be multiplied with how much the slope changes per sample.
+static float poly_blamp(float t, float dt)
+{
+    if (t < dt) {
+        // just after the corner
+        t = 1.0f - t / dt;
+        return t * t * t / 6.0f;
+    }
+    if (t > 1.0f - dt) {
+        // just before the corner
+        t = (t - 1.0f) / dt + 1.0f;
+        return t * t * t / 6.0f;
     }
     return 0.0f;
 }
@@ -72,29 +95,42 @@ float Shape_Process(Shape *s, float phase, float inc, uint8_t waveform)
     float p = (phase < w) ? 0.5f * phase / w
                           : 0.5f + 0.5f * (phase - w) / (1.0f - w);
 
+    // Distance to the bend point at phase = width, needed for jumps and corners there
+    float t = phase - w;
+    if (t < 0.0f) t += 1.0f;
+
     float out = 0.0f;
+    float k;   // how much the slope changes at a corner (per phase, not per sample)
 
     switch (waveform)
         {
         case SYNTH_WAVEFORM_SINE:
             out = sinf(TWO_PI * p);
+            // Bending gives the sine a small corner at phase 0 and at the width.
+            //   Both corners change the slope by the same amount, 0 when not bent.
+            k = PI / w - PI / (1.0f - w);
+            out += k * inc * (poly_blamp(phase, inc) + poly_blamp(t, inc));
             break;
         case SYNTH_WAVEFORM_SAWTOOTH:
             out = (2.0f * p - 1.0f);
             // jump from +1 down to -1 at phase 0
             out -= poly_blep(phase, inc);
+            // Bending gives the ramp a corner at the width, and one at phase 0 the other way round
+            k = 1.0f / (1.0f - w) - 1.0f / w;
+            out += k * inc * (poly_blamp(t, inc) - poly_blamp(phase, inc));
             break;
-        case SYNTH_WAVEFORM_SQUARE: {
+        case SYNTH_WAVEFORM_SQUARE:
             out = (p < 0.5f ? 1.0f : -1.0f);
             // jump up at phase 0, jump down at phase = width
-            float t = phase - w;
-            if (t < 0.0f) t += 1.0f;
             out += poly_blep(phase, inc);
             out -= poly_blep(t, inc);
             break;
-        }
         case SYNTH_WAVEFORM_TRIANGLE:
             out = (p < 0.5f ? 4.0f * p - 1.0f : 3.0f - 4.0f * p);
+            // Corner at the bottom (phase 0, turns up) and at the top (width, turns down).
+            //   Up slope is 2 / w, down slope is -2 / (1 - w), the corner is the difference.
+            k = 2.0f / (w * (1.0f - w));
+            out += k * inc * (poly_blamp(phase, inc) - poly_blamp(t, inc));
             break;
 
         default:

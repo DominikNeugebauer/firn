@@ -78,6 +78,22 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/shape.c
     Core/Src/shapelfo.c
     Core/Src/midi.c
+    Core/Src/softclip.c
+)
+
+# The audio code runs in the I2S interrupt and has to be fast enough also in a
+# Debug build. If it takes longer than the buffer plays, the CPU never leaves
+# the interrupt and nothing else runs. So always optimize these files.
+set_source_files_properties(
+    Core/Src/synth.c
+    Core/Src/shape.c
+    Core/Src/svf.c
+    Core/Src/onepole.c
+    Core/Src/tapedelay.c
+    Core/Src/shapelfo.c
+    Core/Src/envelope.c
+    Core/Src/softclip.c
+    PROPERTIES COMPILE_OPTIONS "-O2"
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME}

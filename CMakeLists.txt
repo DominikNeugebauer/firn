@@ -79,6 +79,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/shapelfo.c
     Core/Src/midi.c
     Core/Src/softclip.c
+    Core/Src/mcp23017.c
+    Core/Src/waveleds.c
 )
 
 # The audio code runs in the I2S interrupt and has to be fast enough also in a
@@ -93,6 +95,7 @@ set_source_files_properties(
     Core/Src/shapelfo.c
     Core/Src/envelope.c
     Core/Src/softclip.c
+    Core/Src/mcp23017.c
     PROPERTIES COMPILE_OPTIONS "-O2"
 )
 

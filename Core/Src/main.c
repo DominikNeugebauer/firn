@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "cs43l22.h"
+#include "waveleds.h"
 #include "synth.h"
 #include "envelope.h"
 #include "midi.h"
@@ -161,6 +162,11 @@ int main(void)
   // Start receiving MIDI on USART2 (RX = PD6)
   Midi_Init(&huart2);
 
+  // Waveform LEDs on the MCP23017
+  if (WaveLeds_Init(&hi2c1) != HAL_OK) {
+    Error_Handler();
+  }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -175,6 +181,9 @@ int main(void)
   uint8_t waveformIndex = 0;
   uint32_t last_press = 0;
   Synth_SetWaveform(waveformOptions[waveformIndex]);
+  if (WaveLeds_Show(waveformOptions[waveformIndex]) != HAL_OK) {
+    Error_Handler();
+  }
 
   while (1)
   {
@@ -211,6 +220,9 @@ int main(void)
       last_press = HAL_GetTick();
       waveformIndex = (waveformIndex + 1) % 4;
       Synth_SetWaveform(waveformOptions[waveformIndex]);
+      if (WaveLeds_Show(waveformOptions[waveformIndex]) != HAL_OK) {
+        Error_Handler();
+      }
     }
     button_pressed = wave_btn;
 

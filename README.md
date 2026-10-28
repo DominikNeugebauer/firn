@@ -24,9 +24,15 @@ The STM32 generates the audio and streams it via I2S and DMA to the on-board CS4
 - `Core/Src/tapedelay.c` – tape echo with feedback and pitch bending
 - `Core/Src/shape.c`    – waveform shaping (pulse width / phase bending, PolyBLEP)
 - `Core/Src/shapelfo.c` – slow sine LFO that moves the shape
-- `firn.ioc`            – STM32CubeMX configuration
+- `Core/Src/mcp23017.c` – i2c expander driver for waveform leds
+- `Core/Src/waveleds.c` – Control of the waveform leds
+- `firn.ioc`            – STM32CubeMX configuratio
 
 Switching between waveforms is not possible in this version!
+
+![alt text](images/system.png)
+
+![alt text](images/firn_proto001.png)
 
 ## SWD Connection
 
